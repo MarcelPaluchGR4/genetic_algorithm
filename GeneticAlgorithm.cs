@@ -1,4 +1,6 @@
-﻿using System;
+﻿//strategia gdzie blizej tam biore do dekodowania
+
+using System;
 using System.Collections.Generic;
 
 class Program
@@ -16,12 +18,18 @@ class Program
         return population;
     }
 
+    static Dictionary<string, double> GenerateValues(List<string> population, int zdmax, int zdmin)
+    {
+        int range = zdmax - zdmin;
+        double step = (double)range / population.Count;
+
+        return null
+    }
+
     static void Main()
     {
         Console.Write("Podaj liczbe bitow: ");
         int n = int.Parse(Console.ReadLine());
-
-        List<string> population = GeneratePopulation(n);
 
         Console.Write("Podaj ZDmin ");
         int zdmin = int.Parse(Console.ReadLine());
@@ -29,7 +37,11 @@ class Program
         Console.Write("Podaj ZDmax");
         int zdmax = int.Parse(Console.ReadLine());
 
-        Console.WriteLine("Generated bit strings:");
+        List<string> population = GeneratePopulation(n);
+
+        var populationMapping = GenerateValues(population, zdmax, zdmin);
+
+        Console.WriteLine("Wygenerowane osobniki");
         foreach (var item in population)
         {
             Console.WriteLine(item);
