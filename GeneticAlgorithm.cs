@@ -3,7 +3,16 @@
 using System;
 using System.Collections.Generic;
 
-class Program
+class Object
+{
+    public Object()
+    {
+        //TODO
+    }
+}
+
+
+static class Program
 {
     static List<string> GeneratePopulation(int n)
     {
@@ -22,7 +31,7 @@ class Program
     {
         int range = zdmax - zdmin;
         double step = (double)range / (population.Count-1);
-        Dictionary<string, double> mapping = new Dictionary<string, double>();
+        Dictionary<string, double> mapping = [];
         for (int i = 0; i < population.Count ; i++)
         {
             mapping[population[i]] = zdmin + step*i;
@@ -36,10 +45,10 @@ class Program
         Console.Write("Podaj liczbe bitow: ");
         int n = int.Parse(Console.ReadLine());
 
-        Console.Write("Podaj ZDmin ");
+        Console.Write("Podaj ZDmin: ");
         int zdmin = int.Parse(Console.ReadLine());
 
-        Console.Write("Podaj ZDmax");
+        Console.Write("Podaj ZDmax: ");
         int zdmax = int.Parse(Console.ReadLine());
 
         List<string> population = GeneratePopulation(n);
