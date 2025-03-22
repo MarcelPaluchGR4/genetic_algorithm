@@ -21,9 +21,14 @@ class Program
     static Dictionary<string, double> GenerateValues(List<string> population, int zdmax, int zdmin)
     {
         int range = zdmax - zdmin;
-        double step = (double)range / population.Count;
-
-        return null
+        double step = (double)range / (population.Count-1);
+        Dictionary<string, double> mapping = new Dictionary<string, double>();
+        for (int i = 0; i < population.Count ; i++)
+        {
+            mapping[population[i]] = zdmin + step*i;
+        }
+        mapping[population[population.Count-1]] = zdmax; 
+        return mapping;
     }
 
     static void Main()
@@ -41,10 +46,10 @@ class Program
 
         var populationMapping = GenerateValues(population, zdmax, zdmin);
 
-        Console.WriteLine("Wygenerowane osobniki");
-        foreach (var item in population)
+        Console.WriteLine("\nGenerated mappings:");
+        foreach (var pair in populationMapping)
         {
-            Console.WriteLine(item);
+            Console.WriteLine($"{pair.Key} -> {pair.Value}");
         }
     }
 }
