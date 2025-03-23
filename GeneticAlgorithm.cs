@@ -1,38 +1,40 @@
-﻿//strategia gdzie blizej tam biore do dekodowania
+﻿// w metodzie Rate klasy Object zakladam ze beda tylko 2 parametry
 
-using System;
-using System.Collections.Generic;
-using System.Reflection.Metadata;
+//strategia gdzie blizej tam biore do dekodowania
+
 using System.Text;
+using System.Collections.Generic;
+using Microsoft.VisualBasic;
 
 class Object
 {
 
     public string Parameter { get; set; }
-    private static readonly Random random = new Random();
+    public double Rating { get; set; }
+    private static readonly Random random = new();
 
-    public Object()
+    public Object(int LBnP)
     {
-        StringBuilder sb = new(6);
-        for (int i = 0; i < 6; i++)
+        StringBuilder sb = new(LBnP);
+        for (int i = 0; i < LBnP; i++)
         {
             sb.Append(random.Next(2));
         }
         Parameter = sb.ToString();
     }
 
-    public double GetRating(Dictionary<string, double>bitStringValues)
+    public void Rate(Dictionary<string, double>bytesStringsValues, int LBnP)
     {
-        // ocenianie
-        string part1 = Parameter.Substring(0, 3);
-        string part2 = Parameter.Substring(3, 3);
-        double value = bitStringValues[part1] + bitStringValues[part2];
-        return value;
-
+        // ocenianie, tutaj zakladam ze beda tylko 2 parametry
+        string part1 = Parameter.Substring(0, LBnP);
+        string part2 = Parameter.Substring(LBnP, LBnP);
+        double value = bytesStringsValues[part1] + bytesStringsValues[part2];
+        Rating = value;
     }
 
     public void Mutate()
     {
+        //mutacja
         int randomIndex = random.Next(Parameter.Length);
         char[] charList = Parameter.ToCharArray();
         if (charList[randomIndex] == '0')
@@ -44,12 +46,19 @@ class Object
 }
 
 
-static class Program
+class Program
 {
+    static int LBnP = 3;
+    static int numberOfParameters = 2;
+    static int zdmin = -1;
+    static int zdmax = 1;
+    static int numberOfObjects = 11;
+    static float tournamentSize = 0.2f;
+
     static List<string> GenerateBytesStrings(int n)
     {
         int total = (int)Math.Pow(2, n);
-        List<string> bytesStrings = new List<string>();
+        List<string> bytesStrings = [];
 
         for (int i = 0; i < total; i++)
         {
@@ -72,33 +81,74 @@ static class Program
         return mapping;
     }
 
+    public static List<Object> CreateObjects()
+    {
+        List<Object> objects = [];
+        for (int i=0; i<numberOfObjects; i++)
+        {
+            Object specimen = new(LBnP * numberOfParameters);
+            objects.Add(specimen);
+        }
+        return objects;
+    }
+
+    public static Object TournamentSelection(List<Object> objects)
+    {
+        int numberOfSelectedObjects = (int)(numberOfObjects * tournamentSize);
+        List<Object> selectedObjects = [];
+        Random random = new();
+        for (int i=0; i<numberOfSelectedObjects; i++)
+        {
+            selectedObjects.Add(objects[random.Next(objects.Count)]);
+        }
+        double bestRating = selectedObjects[0].Rating;
+        Object bestObject = selectedObjects[0];
+        foreach (Object item in selectedObjects)
+        {
+            if (item.Rating > bestRating)
+            {
+                bestObject = item;
+            }
+        } 
+        return bestObject;
+    }
+
     static void Main()
     {
-        // Console.Write("Podaj liczbe bitow: ");
-        // int n = int.Parse(Console.ReadLine());
+        // Console.Write("Podaj liczbe bitow na parametr: ");
+        // Program.LBnP = int.Parse(Console.ReadLine());
 
         // Console.Write("Podaj ZDmin: ");
-        // int zdmin = int.Parse(Console.ReadLine());
+        // Program.zdmin = int.Parse(Console.ReadLine());
 
         // Console.Write("Podaj ZDmax: ");
-        // int zdmax = int.Parse(Console.ReadLine());
+        // Program.zdmax = int.Parse(Console.ReadLine());
 
-        int n = 3;
-        int zdmin = -1;
-        int zdmax = 1;
+        List<string> bytesStrings = GenerateBytesStrings(LBnP);
+        var bytesStringsValues = GenerateValues(bytesStrings, zdmax, zdmin);
 
-        List<string> bytesStrings = GenerateBytesStrings(n);
+        List<Object> objects = CreateObjects();
+        List<Object> selectedObjects = [];
+        foreach (Object item in objects)
+        {
+            item.Rate(bytesStringsValues, LBnP);
+        }
+        for (int i=0; i < numberOfObjects-1;i++)
+        {
+            selectedObjects.Add(TournamentSelection(objects));
+        }
+        foreach (Object item in selectedObjects)
+        {
+            Console.WriteLine(item.Parameter);
+            Console.WriteLine(item.Rating);
+        }
 
-        var bitStringValues = GenerateValues(bytesStrings, zdmax, zdmin);
+
         
-        Object specimen = new();
-        specimen.GetRating(bitStringValues);
-        Console.WriteLine(specimen.Parameter);
-        specimen.Mutate();
-        Console.WriteLine(specimen.Parameter);
+        
 
         // Console.WriteLine("\nGenerated mappings:");
-        // foreach (var pair in bitStringValues)
+        // foreach (var pair in bytesStringsValues)
         // {
         //     Console.WriteLine($"{pair.Key} -> {pair.Value}");
         // }
