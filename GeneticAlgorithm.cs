@@ -2,63 +2,105 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata;
+using System.Text;
 
 class Object
 {
+
+    public string Parameter { get; set; }
+    private static readonly Random random = new Random();
+
     public Object()
     {
-        //TODO
+        StringBuilder sb = new(6);
+        for (int i = 0; i < 6; i++)
+        {
+            sb.Append(random.Next(2));
+        }
+        Parameter = sb.ToString();
+    }
+
+    public double GetRating(Dictionary<string, double>bitStringValues)
+    {
+        // ocenianie
+        string part1 = Parameter.Substring(0, 3);
+        string part2 = Parameter.Substring(3, 3);
+        double value = bitStringValues[part1] + bitStringValues[part2];
+        return value;
+
+    }
+
+    public void Mutate()
+    {
+        int randomIndex = random.Next(Parameter.Length);
+        char[] charList = Parameter.ToCharArray();
+        if (charList[randomIndex] == '0')
+            charList[randomIndex] = '1';
+        else 
+            charList[randomIndex] = '0';
+        Parameter = new string(charList);
     }
 }
 
 
 static class Program
 {
-    static List<string> GeneratePopulation(int n)
+    static List<string> GenerateBytesStrings(int n)
     {
         int total = (int)Math.Pow(2, n);
-        List<string> population = new List<string>();
+        List<string> bytesStrings = new List<string>();
 
         for (int i = 0; i < total; i++)
         {
-            population.Add(Convert.ToString(i, 2).PadLeft(n, '0'));
+            bytesStrings.Add(Convert.ToString(i, 2).PadLeft(n, '0'));
         }
 
-        return population;
+        return bytesStrings;
     }
 
-    static Dictionary<string, double> GenerateValues(List<string> population, int zdmax, int zdmin)
+    static Dictionary<string, double> GenerateValues(List<string> bytesStrings, int zdmax, int zdmin)
     {
         int range = zdmax - zdmin;
-        double step = (double)range / (population.Count-1);
+        double step = (double)range / (bytesStrings.Count-1);
         Dictionary<string, double> mapping = [];
-        for (int i = 0; i < population.Count ; i++)
+        for (int i = 0; i < bytesStrings.Count ; i++)
         {
-            mapping[population[i]] = zdmin + step*i;
+            mapping[bytesStrings[i]] = zdmin + step*i;
         }
-        mapping[population[population.Count-1]] = zdmax; 
+        mapping[bytesStrings[bytesStrings.Count-1]] = zdmax; 
         return mapping;
     }
 
     static void Main()
     {
-        Console.Write("Podaj liczbe bitow: ");
-        int n = int.Parse(Console.ReadLine());
+        // Console.Write("Podaj liczbe bitow: ");
+        // int n = int.Parse(Console.ReadLine());
 
-        Console.Write("Podaj ZDmin: ");
-        int zdmin = int.Parse(Console.ReadLine());
+        // Console.Write("Podaj ZDmin: ");
+        // int zdmin = int.Parse(Console.ReadLine());
 
-        Console.Write("Podaj ZDmax: ");
-        int zdmax = int.Parse(Console.ReadLine());
+        // Console.Write("Podaj ZDmax: ");
+        // int zdmax = int.Parse(Console.ReadLine());
 
-        List<string> population = GeneratePopulation(n);
+        int n = 3;
+        int zdmin = -1;
+        int zdmax = 1;
 
-        var populationMapping = GenerateValues(population, zdmax, zdmin);
+        List<string> bytesStrings = GenerateBytesStrings(n);
 
-        Console.WriteLine("\nGenerated mappings:");
-        foreach (var pair in populationMapping)
-        {
-            Console.WriteLine($"{pair.Key} -> {pair.Value}");
-        }
+        var bitStringValues = GenerateValues(bytesStrings, zdmax, zdmin);
+        
+        Object specimen = new();
+        specimen.GetRating(bitStringValues);
+        Console.WriteLine(specimen.Parameter);
+        specimen.Mutate();
+        Console.WriteLine(specimen.Parameter);
+
+        // Console.WriteLine("\nGenerated mappings:");
+        // foreach (var pair in bitStringValues)
+        // {
+        //     Console.WriteLine($"{pair.Key} -> {pair.Value}");
+        // }
     }
 }
