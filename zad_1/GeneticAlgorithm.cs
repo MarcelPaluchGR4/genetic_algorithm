@@ -6,7 +6,7 @@ using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualBasic;
 
-class Object
+class Object : ICloneable
 {
 
     public string Parameter { get; set; }
@@ -21,6 +21,27 @@ class Object
             sb.Append(random.Next(2));
         }
         Parameter = sb.ToString();
+    }
+
+    public Object(string parameter)
+    {
+        Parameter = new string(parameter);
+    }
+
+    public Object(Object item)
+    {
+        Parameter = item.Parameter;
+        Rating = item.Rating;
+    }
+
+
+    public object Clone()
+    {
+        return new Object(3)
+        {
+            Parameter = new string(this.Parameter),
+            Rating = this.Rating
+        };
     }
 
     public void Rate(Dictionary<string, double>bytesStringsValues, int LBnP)
@@ -45,14 +66,13 @@ class Object
     }
 }
 
-
 class Program
 {
     static int LBnP = 3;
     static int numberOfParameters = 2;
     static int zdmin = -1;
     static int zdmax = 1;
-    static int numberOfObjects = 11;
+    static int numberOfObjects = 100;
     static float tournamentSize = 0.2f;
 
     static List<string> GenerateBytesStrings(int n)
@@ -107,10 +127,36 @@ class Program
         {
             if (item.Rating > bestRating)
             {
+                bestRating = item.Rating;
+                bestObject = item;
+            }
+        } 
+        return new Object(bestObject.Parameter);
+    }
+
+    public static Object HotDeckSelection(List<Object> objects)
+    {
+        double bestRating = objects[0].Rating;
+        Object bestObject = objects[0];
+        foreach (Object item in objects)
+        {
+            if (item.Rating > bestRating)
+            {
+                bestRating = item.Rating;
                 bestObject = item;
             }
         } 
         return bestObject;
+    }
+
+    public static double GetMeanObjectValue(List<Object> objects)
+    {
+        double total = 0;
+        foreach (Object item in objects)
+        {
+            total += item.Rating;
+        }
+        return total/objects.Count;
     }
 
     static void Main()
@@ -130,27 +176,35 @@ class Program
         List<Object> objects = CreateObjects();
         List<Object> selectedObjects = [];
         foreach (Object item in objects)
-        {
-            item.Rate(bytesStringsValues, LBnP);
+            {
+                item.Rate(bytesStringsValues, LBnP);
+            }
+        for (int j=0; j<50;j++)
+        {   
+            for (int i=0; i < numberOfObjects-1;i++)
+            {
+                selectedObjects.Add(TournamentSelection(objects));
+            }
+            foreach (Object item in selectedObjects)
+            {
+                item.Mutate();
+            }
+            selectedObjects.Add(HotDeckSelection(objects));
+            foreach (Object item in selectedObjects)
+            {
+                item.Rate(bytesStringsValues, LBnP);
+            }
+            Console.WriteLine($"Iteracja {j}, najlepszy {HotDeckSelection(selectedObjects).Rating}, srednia {GetMeanObjectValue(selectedObjects)}");
+            objects.Clear();
+            selectedObjects.ForEach((item)=>
+            {
+                objects.Add(new Object(item));
+            });
+            selectedObjects.Clear();
         }
-        for (int i=0; i < numberOfObjects-1;i++)
-        {
-            selectedObjects.Add(TournamentSelection(objects));
-        }
-        foreach (Object item in selectedObjects)
-        {
-            Console.WriteLine(item.Parameter);
-            Console.WriteLine(item.Rating);
-        }
-
-
         
-        
 
-        // Console.WriteLine("\nGenerated mappings:");
-        // foreach (var pair in bytesStringsValues)
-        // {
-        //     Console.WriteLine($"{pair.Key} -> {pair.Value}");
-        // }
+
+    
     }
 }
