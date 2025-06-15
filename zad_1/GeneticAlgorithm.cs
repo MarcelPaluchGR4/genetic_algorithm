@@ -5,13 +5,16 @@
 using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualBasic;
+using System.Runtime.InteropServices;
 
-class Object : ICloneable
+
+class Object
 {
+    static Random random = new Random();
 
     public string Parameter { get; set; }
     public double Rating { get; set; }
-    private static readonly Random random = new();
+
 
     public Object(int LBnP)
     {
@@ -25,42 +28,32 @@ class Object : ICloneable
 
     public Object(string parameter)
     {
-        Parameter = new string(parameter);
+        Parameter = new string(parameter.ToCharArray());
     }
 
     public Object(Object item)
     {
-        Parameter = item.Parameter;
+        Parameter = new string(item.Parameter.ToCharArray());
         Rating = item.Rating;
     }
 
-
-    public object Clone()
-    {
-        return new Object(3)
-        {
-            Parameter = new string(this.Parameter),
-            Rating = this.Rating
-        };
-    }
-
-    public void Rate(Dictionary<string, double>bytesStringsValues, int LBnP)
+    public void Rate(Dictionary<string, double> bytesStringsValues, int LBnP)
     {
         // ocenianie, tutaj zakladam ze beda tylko 2 parametry
         string part1 = Parameter.Substring(0, LBnP);
         string part2 = Parameter.Substring(LBnP, LBnP);
-        double value = bytesStringsValues[part1] + bytesStringsValues[part2];
-        Rating = value;
+        double x1 = bytesStringsValues[part1];
+        double x2 = bytesStringsValues[part2];
+        Rating = Math.Sin(x1 * 0.05) + Math.Sin(x2 * 0.05) + (0.4 * Math.Sin(x1 * 0.15) * Math.Sin(x2 * 0.15));
     }
 
     public void Mutate()
     {
-        //mutacja
         int randomIndex = random.Next(Parameter.Length);
         char[] charList = Parameter.ToCharArray();
         if (charList[randomIndex] == '0')
             charList[randomIndex] = '1';
-        else 
+        else
             charList[randomIndex] = '0';
         Parameter = new string(charList);
     }
@@ -68,11 +61,12 @@ class Object : ICloneable
 
 class Program
 {
+    static Random random = new Random();
     static int LBnP = 3;
     static int numberOfParameters = 2;
-    static int zdmin = -1;
-    static int zdmax = 1;
-    static int numberOfObjects = 100;
+    static int zdmin = 0;
+    static int zdmax = 100;
+    static int numberOfObjects = 11;
     static float tournamentSize = 0.2f;
 
     static List<string> GenerateBytesStrings(int n)
@@ -95,9 +89,9 @@ class Program
         Dictionary<string, double> mapping = [];
         for (int i = 0; i < bytesStrings.Count ; i++)
         {
-            mapping[bytesStrings[i]] = zdmin + step*i;
+            mapping[bytesStrings[i]] = (double)zdmin + step*i;
         }
-        mapping[bytesStrings[bytesStrings.Count-1]] = zdmax; 
+        mapping[bytesStrings[bytesStrings.Count-1]] = zdmax;
         return mapping;
     }
 
@@ -112,26 +106,22 @@ class Program
         return objects;
     }
 
-    public static Object TournamentSelection(List<Object> objects)
+    public static Object TournamentSelection(List<Object> population)
     {
-        int numberOfSelectedObjects = (int)(numberOfObjects * tournamentSize);
-        List<Object> selectedObjects = [];
-        Random random = new();
-        for (int i=0; i<numberOfSelectedObjects; i++)
+        int tournamentSizeCount = Math.Max(2, (int)(population.Count * tournamentSize));
+        Object best = null;
+        double bestRating = double.MinValue;
+
+        for (int i = 0; i < tournamentSizeCount; i++)
         {
-            selectedObjects.Add(objects[random.Next(objects.Count)]);
-        }
-        double bestRating = selectedObjects[0].Rating;
-        Object bestObject = selectedObjects[0];
-        foreach (Object item in selectedObjects)
-        {
-            if (item.Rating > bestRating)
+            Object candidate = population[random.Next(population.Count)];
+            if (candidate.Rating > bestRating)
             {
-                bestRating = item.Rating;
-                bestObject = item;
+                bestRating = candidate.Rating;
+                best = candidate;
             }
-        } 
-        return new Object(bestObject.Parameter);
+        }
+        return new Object(best); // zwracamy kopię najlepszego osobnika
     }
 
     public static Object HotDeckSelection(List<Object> objects)
@@ -146,7 +136,8 @@ class Program
                 bestObject = item;
             }
         } 
-        return bestObject;
+
+        return new Object(bestObject);
     }
 
     public static double GetMeanObjectValue(List<Object> objects)
@@ -161,14 +152,6 @@ class Program
 
     static void Main()
     {
-        // Console.Write("Podaj liczbe bitow na parametr: ");
-        // Program.LBnP = int.Parse(Console.ReadLine());
-
-        // Console.Write("Podaj ZDmin: ");
-        // Program.zdmin = int.Parse(Console.ReadLine());
-
-        // Console.Write("Podaj ZDmax: ");
-        // Program.zdmax = int.Parse(Console.ReadLine());
 
         List<string> bytesStrings = GenerateBytesStrings(LBnP);
         var bytesStringsValues = GenerateValues(bytesStrings, zdmax, zdmin);
@@ -179,9 +162,9 @@ class Program
             {
                 item.Rate(bytesStringsValues, LBnP);
             }
-        for (int j=0; j<50;j++)
+        for (int j=0; j<2000;j++)
         {   
-            for (int i=0; i < numberOfObjects-1;i++)
+            for (int i = 0; i < numberOfObjects - 1; i++)
             {
                 selectedObjects.Add(TournamentSelection(objects));
             }
@@ -201,10 +184,6 @@ class Program
                 objects.Add(new Object(item));
             });
             selectedObjects.Clear();
-        }
-        
-
-
-    
+        }    
     }
 }
